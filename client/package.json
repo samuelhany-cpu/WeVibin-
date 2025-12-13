@@ -4,6 +4,8 @@
   "description": "WeVibin' desktop client",
   "main": "dist/main/index.js",
   "scripts": {
+    "detect-ip": "node detect-ip.js",
+    "predev": "npm run detect-ip",
     "dev": "concurrently \"npm:watch:*\"",
     "watch:main": "tsc -p src/main/tsconfig.json --watch",
     "watch:preload": "tsc -p src/preload/tsconfig.json --watch",
@@ -12,7 +14,9 @@
     "build:main": "tsc -p src/main/tsconfig.json",
     "build:preload": "tsc -p src/preload/tsconfig.json",
     "build:renderer": "vite build",
+    "preelectron": "npm run detect-ip",
     "electron": "cross-env NODE_ENV=development electron .",
+    "prestart": "npm run detect-ip",
     "start": "npm run build && electron .",
     "type-check": "tsc --noEmit"
   },

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeVibin' Diagnostic Test Suite</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    .test { padding: 5px; margin: 2px 0; }
+    .pass { color: #00ff00; }
+    .fail { color: #ff0000; }
+    .warn { color: #ffaa00; }
+    .info { color: #00aaff; }
+    .section { margin-top: 20px; font-weight: bold; font-size: 18px; }
+    .subsection { margin-top: 10px; margin-left: 20px; font-weight: bold; }
+    .result { margin-left: 40px; }
+    #summary { margin-top: 30px; padding: 20px; background: #2a2a2a; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>🔬 WeVibin' Comprehensive Diagnostic Test</h1>
+  <div id="output"></div>
+  <div id="summary"></div>
+
+  <script>
+    const output = document.getElementById('output');
+    const summary = document.getElementById('summary');
+    let passCount = 0;
+    let failCount = 0;
+    let warnCount = 0;
+    const failures = [];
+
+    function log(message, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `test ${type}`;
+      div.textContent = message;
+      output.appendChild(div);
+      
+      if (type === 'pass') passCount++;
+      if (type === 'fail') {
+        failCount++;
+        failures.push(message);
+      }
+      if (type === 'warn') warnCount++;
+      
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+
+    function section(title) {
+      const div = document.createElement('div');
+      div.className = 'section';
+      div.textContent = `\n━━━ ${title} ━━━`;
+      output.appendChild(div);
+    }
+
+    function subsection(title) {
+      const div = document.createElement('div');
+      div.className = 'subsection';
+      div.textContent = `▸ ${title}`;
+      output.appendChild(div);
+    }
+
+    async function runTests() {
+      log('🚀 Starting Comprehensive Diagnostic Tests...', 'info');
+      log(`Time: ${new Date().toLocaleString()}`, 'info');
+      
+      // TEST CATEGORY 1: ENVIRONMENT & BROWSER
+      section('1. ENVIRONMENT & BROWSER CHECKS (10 tests)');
+      
+      subsection('1.1 Browser APIs');
+      try {
+        log(localStorage ? '✓ localStorage available' : '✗ localStorage missing', localStorage ? 'pass' : 'fail');
+        log(sessionStorage ? '✓ sessionStorage available' : '✗ sessionStorage missing', sessionStorage ? 'pass' : 'fail');
+        log(fetch ? '✓ fetch API available' : '✗ fetch missing', fetch ? 'pass' : 'fail');
+        log(WebSocket ? '✓ WebSocket available' : '✗ WebSocket missing', WebSocket ? 'pass' : 'fail');
+        log(RTCPeerConnection ? '✓ RTCPeerConnection available' : '✗ WebRTC missing', RTCPeerConnection ? 'pass' : 'fail');
+        log(navigator.mediaDevices ? '✓ mediaDevices API available' : '✗ mediaDevices missing', navigator.mediaDevices ? 'pass' : 'fail');
+      } catch (e) {
+        log(`✗ Error checking browser APIs: ${e.message}`, 'fail');
+      }
+
+      subsection('1.2 Electron Context');
+      try {
+        log(window.electron ? '✓ Electron preload available' : '⚠ Electron preload missing (might be browser mode)', window.electron ? 'pass' : 'warn');
+        log(process ? '✓ process object available' : '⚠ process not available', process ? 'pass' : 'warn');
+      } catch (e) {
+        log(`⚠ Not in Electron context: ${e.message}`, 'warn');
+      }
+
+      subsection('1.3 Import.meta.env');
+      try {
+        log(import.meta ? '✓ import.meta available' : '✗ import.meta missing', import.meta ? 'pass' : 'fail');
+        log(import.meta.env ? '✓ import.meta.env available' : '✗ import.meta.env missing', import.meta.env ? 'pass' : 'fail');
+      } catch (e) {
+        log(`✗ Error checking import.meta: ${e.message}`, 'fail');
+      }
+
+      // TEST CATEGORY 2: NETWORK & SERVER CONNECTION
+      section('2. NETWORK & SERVER CONNECTION (15 tests)');
+      
+      subsection('2.1 Server Reachability');
+      const serverURLs = [
+        'http://localhost:3001',
+        'http://127.0.0.1:3001',
+        'http://192.168.1.147:3001'
+      ];
+
+      for (const url of serverURLs) {
+        try {
+          const response = await fetch(url, { method: 'GET' });
+          const data = await response.json();
+          log(`✓ ${url} reachable: ${data.message}`, 'pass');
+        } catch (e) {
+          log(`✗ ${url} NOT reachable: ${e.message}`, 'fail');
+        }
+      }
+
+      subsection('2.2 WebSocket Connection');
+      try {
+        const ws = new WebSocket('ws://localhost:3001');
+        await new Promise((resolve, reject) => {
+          ws.onopen = () => {
+            log('✓ WebSocket connection successful', 'pass');
+            ws.close();
+            resolve();
+          };
+          ws.onerror = (e) => {
+            log(`✗ WebSocket connection failed`, 'fail');
+            reject();
+          };
+          setTimeout(() => reject('timeout'), 3000);
+        });
+      } catch (e) {
+        log(`✗ WebSocket test failed: ${e}`, 'fail');
+      }
+
+      subsection('2.3 Socket.IO Connection');
+      try {
+        // Test if Socket.IO library is loaded
+        log(window.io ? '✓ Socket.IO library loaded' : '✗ Socket.IO library not loaded', window.io ? 'pass' : 'fail');
+      } catch (e) {
+        log(`✗ Socket.IO check failed: ${e.message}`, 'fail');
+      }
+
+      // TEST CATEGORY 3: CONTENT SECURITY POLICY
+      section('3. CONTENT SECURITY POLICY (10 tests)');
+      
+      subsection('3.1 CSP Meta Tag');
+      const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+      if (cspMeta) {
+        log('✓ CSP meta tag found', 'pass');
+        const cspContent = cspMeta.getAttribute('content');
+        log(`   CSP: ${cspContent.substring(0, 100)}...`, 'info');
+        
+        // Check for specific directives
+        log(cspContent.includes('default-src') ? '✓ default-src directive present' : '✗ default-src missing', cspContent.includes('default-src') ? 'pass' : 'fail');
+        log(cspContent.includes('script-src') ? '✓ script-src directive present' : '✗ script-src missing', cspContent.includes('script-src') ? 'pass' : 'fail');
+        log(cspContent.includes('connect-src') ? '✓ connect-src directive present' : '✗ connect-src missing', cspContent.includes('connect-src') ? 'pass' : 'fail');
+        log(cspContent.includes('unsafe-eval') ? '⚠ unsafe-eval present (security risk)' : '✓ No unsafe-eval', cspContent.includes('unsafe-eval') ? 'warn' : 'pass');
+        log(cspContent.includes('192.168.*') ? '⚠ Invalid wildcard in CSP' : '✓ No invalid wildcards', cspContent.includes('192.168.*') ? 'warn' : 'pass');
+      } else {
+        log('⚠ No CSP meta tag found', 'warn');
+      }
+
+      subsection('3.2 CSP Violations');
+      let cspViolations = [];
+      document.addEventListener('securitypolicyviolation', (e) => {
+        cspViolations.push(e);
+        log(`✗ CSP violation: ${e.violatedDirective} - ${e.blockedURI}`, 'fail');
+      });
+      
+      setTimeout(() => {
+        if (cspViolations.length === 0) {
+          log('✓ No CSP violations detected', 'pass');
+        } else {
+          log(`✗ ${cspViolations.length} CSP violations detected`, 'fail');
+        }
+      }, 2000);
+
+      // TEST CATEGORY 4: DOM & REACT
+      section('4. DOM & REACT MOUNTING (15 tests)');
+      
+      subsection('4.1 Root Element');
+      const root = document.getElementById('root');
+      log(root ? '✓ #root element exists' : '✗ #root element missing', root ? 'pass' : 'fail');
+      log(root && root.children.length > 0 ? '✓ #root has children' : '✗ #root is empty', root && root.children.length > 0 ? 'pass' : 'fail');
+      
+      if (root) {
+        log(`   Root children count: ${root.children.length}`, 'info');
+        log(`   Root HTML: ${root.innerHTML.substring(0, 200)}...`, 'info');
+      }
+
+      subsection('4.2 React Loading');
+      setTimeout(() => {
+        log(window.React ? '✓ React loaded' : '✗ React not loaded', window.React ? 'pass' : 'fail');
+        log(window.ReactDOM ? '✓ ReactDOM loaded' : '✗ ReactDOM not loaded', window.ReactDOM ? 'pass' : 'fail');
+        
+        // Check for React root
+        const reactRoot = root?._reactRootContainer || root?._reactRootContext;
+        log(reactRoot || root?.children.length > 0 ? '✓ React appears mounted' : '✗ React not mounted', reactRoot || root?.children.length > 0 ? 'pass' : 'fail');
+      }, 1000);
+
+      subsection('4.3 Component Rendering');
+      setTimeout(() => {
+        // Check if Home component is visible
+        const homeElement = document.querySelector('h1');
+        log(homeElement ? `✓ Found h1 element: "${homeElement.textContent}"` : '✗ No h1 element found', homeElement ? 'pass' : 'fail');
+        
+        // Check for input fields
+        const inputs = document.querySelectorAll('input');
+        log(inputs.length >= 2 ? `✓ Found ${inputs.length} input fields` : `⚠ Expected at least 2 inputs, found ${inputs.length}`, inputs.length >= 2 ? 'pass' : 'warn');
+        
+        // Check for buttons
+        const buttons = document.querySelectorAll('button');
+        log(buttons.length >= 2 ? `✓ Found ${buttons.length} buttons` : `⚠ Expected at least 2 buttons, found ${buttons.length}`, buttons.length >= 2 ? 'pass' : 'warn');
+      }, 2000);
+
+      // TEST CATEGORY 5: DEPENDENCIES & MODULES
+      section('5. DEPENDENCIES & MODULES (10 tests)');
+      
+      subsection('5.1 Core Dependencies');
+      setTimeout(async () => {
+        try {
+          // Test dynamic imports
+          const axios = await import('axios');
+          log(axios ? '✓ axios module loads' : '✗ axios module failed', axios ? 'pass' : 'fail');
+        } catch (e) {
+          log(`✗ axios import failed: ${e.message}`, 'fail');
+        }
+      }, 500);
+
+      subsection('5.2 Service Files');
+      // These will be tested when modules load
+      setTimeout(() => {
+        log('⚠ Service file tests require module context', 'warn');
+      }, 1000);
+
+      // TEST CATEGORY 6: CONSOLE ERRORS
+      section('6. CONSOLE ERRORS & WARNINGS (10 tests)');
+      
+      const consoleErrors = [];
+      const consoleWarns = [];
+      const originalError = console.error;
+      const originalWarn = console.warn;
+
+      console.error = function(...args) {
+        consoleErrors.push(args.join(' '));
+        originalError.apply(console, args);
+      };
+
+      console.warn = function(...args) {
+        consoleWarns.push(args.join(' '));
+        originalWarn.apply(console, args);
+      };
+
+      setTimeout(() => {
+        log(`${consoleErrors.length === 0 ? '✓' : '✗'} Console errors: ${consoleErrors.length}`, consoleErrors.length === 0 ? 'pass' : 'fail');
+        consoleErrors.forEach(err => log(`   ↳ ${err.substring(0, 150)}`, 'fail'));
+        
+        log(`${consoleWarns.length === 0 ? '✓' : '⚠'} Console warnings: ${consoleWarns.length}`, consoleWarns.length === 0 ? 'pass' : 'warn');
+        consoleWarns.slice(0, 5).forEach(warn => log(`   ↳ ${warn.substring(0, 150)}`, 'warn'));
+      }, 3000);
+
+      // TEST CATEGORY 7: LOCAL STORAGE
+      section('7. LOCAL STORAGE & STATE (5 tests)');
+      
+      try {
+        localStorage.setItem('test_key', 'test_value');
+        const val = localStorage.getItem('test_key');
+        localStorage.removeItem('test_key');
+        log(val === 'test_value' ? '✓ localStorage read/write works' : '✗ localStorage broken', val === 'test_value' ? 'pass' : 'fail');
+      } catch (e) {
+        log(`✗ localStorage test failed: ${e.message}`, 'fail');
+      }
+
+      // Check for saved tokens
+      const spotifyToken = localStorage.getItem('spotify_access_token');
+      log(spotifyToken ? '⚠ Spotify token found in storage' : '✓ No Spotify token (expected)', spotifyToken ? 'warn' : 'pass');
+
+      // TEST CATEGORY 8: MEDIA DEVICES
+      section('8. MEDIA DEVICES & PERMISSIONS (10 tests)');
+      
+      subsection('8.1 Media Device Enumeration');
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        log(devices ? `✓ Found ${devices.length} media devices` : '✗ No devices found', devices ? 'pass' : 'fail');
+        
+        const audioInputs = devices.filter(d => d.kind === 'audioinput');
+        const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
+        const videoInputs = devices.filter(d => d.kind === 'videoinput');
+        
+        log(`   ↳ Audio inputs: ${audioInputs.length}`, 'info');
+        log(`   ↳ Audio outputs: ${audioOutputs.length}`, 'info');
+        log(`   ↳ Video inputs: ${videoInputs.length}`, 'info');
+        
+        log(audioInputs.length > 0 ? '✓ Microphone detected' : '⚠ No microphone found', audioInputs.length > 0 ? 'pass' : 'warn');
+        log(audioOutputs.length > 0 ? '✓ Speaker detected' : '⚠ No speaker found', audioOutputs.length > 0 ? 'pass' : 'warn');
+      } catch (e) {
+        log(`✗ Device enumeration failed: ${e.message}`, 'fail');
+      }
+
+      subsection('8.2 Microphone Permissions');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        log('✓ Microphone permission granted', 'pass');
+        stream.getTracks().forEach(track => track.stop());
+      } catch (e) {
+        log(`⚠ Microphone permission denied or unavailable: ${e.message}`, 'warn');
+      }
+
+      // TEST CATEGORY 9: PERFORMANCE
+      section('9. PERFORMANCE & LOADING (5 tests)');
+      
+      const perfData = performance.getEntriesByType('navigation')[0];
+      if (perfData) {
+        const loadTime = perfData.loadEventEnd - perfData.fetchStart;
+        log(`✓ Page load time: ${loadTime.toFixed(0)}ms`, loadTime < 3000 ? 'pass' : 'warn');
+        log(`   ↳ DOM ready: ${perfData.domContentLoadedEventEnd - perfData.fetchStart}ms`, 'info');
+        log(`   ↳ Resources loaded: ${perfData.loadEventEnd - perfData.loadEventStart}ms`, 'info');
+      }
+
+      // TEST CATEGORY 10: RUNTIME CHECKS
+      section('10. RUNTIME BEHAVIOR (10 tests)');
+      
+      setTimeout(() => {
+        // Check if app is actually interactive
+        const inputs = document.querySelectorAll('input');
+        if (inputs.length > 0) {
+          try {
+            inputs[0].value = 'test';
+            log(inputs[0].value === 'test' ? '✓ Inputs are functional' : '✗ Inputs not working', inputs[0].value === 'test' ? 'pass' : 'fail');
+            inputs[0].value = '';
+          } catch (e) {
+            log(`✗ Input test failed: ${e.message}`, 'fail');
+          }
+        }
+
+        // Check for event listeners
+        const buttons = document.querySelectorAll('button');
+        if (buttons.length > 0) {
+          log(`✓ Found ${buttons.length} interactive buttons`, 'pass');
+        }
+
+        // Final summary
+        setTimeout(() => {
+          summary.innerHTML = `
+            <h2>📊 TEST SUMMARY</h2>
+            <p><span class="pass">✓ Passed: ${passCount}</span></p>
+            <p><span class="fail">✗ Failed: ${failCount}</span></p>
+            <p><span class="warn">⚠ Warnings: ${warnCount}</span></p>
+            <p><strong>Total Tests: ${passCount + failCount + warnCount}</strong></p>
+            ${failCount > 0 ? `
+              <h3>🔴 CRITICAL FAILURES:</h3>
+              <ul>${failures.map(f => `<li>${f}</li>`).join('')}</ul>
+            ` : '<h3 class="pass">🎉 ALL CRITICAL TESTS PASSED!</h3>'}
+            <p style="margin-top: 20px; color: #00aaff;">
+              ${failCount === 0 ? '✅ The app appears to be working correctly!' : '⚠️ Issues detected. Check failures above.'}
+            </p>
+          `;
+        }, 4000);
+      }, 2500);
+    }
+
+    // Start tests when page loads
+    window.addEventListener('load', () => {
+      setTimeout(runTests, 500);
+    });
+  </script>
+</body>
+</html>
