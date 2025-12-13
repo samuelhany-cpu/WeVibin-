@@ -13,6 +13,15 @@ const io = new Server(httpServer, {
   },
 });
 
+// Simple health check endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'running', 
+    message: 'WeVibin\' server is running. Connect using the client app, not your browser!',
+    version: '1.0.0'
+  });
+});
+
 const roomManager = new RoomManager();
 const friendManager = new FriendManager();
 
@@ -338,6 +347,23 @@ io.on('connection', (socket) => {
 });
 
 const PORT = 3001;
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
+  const os = require('os');
+  const interfaces = os.networkInterfaces();
+  const addresses: string[] = [];
+  
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        addresses.push(iface.address);
+      }
+    }
+  }
+  
   console.log(`🎵 WeVibin' server running on port ${PORT}`);
+  console.log(`📡 Local access: http://localhost:${PORT}`);
+  if (addresses.length > 0) {
+    console.log(`🌐 Network access (share this with friends on same WiFi):`);
+    addresses.forEach(addr => console.log(`   http://${addr}:${PORT}`));
+  }
 });

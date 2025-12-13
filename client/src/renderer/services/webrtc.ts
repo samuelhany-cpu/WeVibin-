@@ -8,16 +8,70 @@ const configuration: RTCConfiguration = {
 };
 
 let localStream: MediaStream | null = null;
+let currentAudioInputId: string | null = null;
+let currentAudioOutputId: string | null = null;
 
-export async function initializeWebRTC() {
+export async function initializeWebRTC(audioInputId?: string) {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const constraints: MediaStreamConstraints = {
+      audio: audioInputId ? { deviceId: { exact: audioInputId } } : true
+    };
+    localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    if (audioInputId) {
+      currentAudioInputId = audioInputId;
+    }
     console.log('Microphone access granted');
     return true;
   } catch (error) {
     console.error('Failed to get microphone access:', error);
     return false;
   }
+}
+
+export async function setAudioInputDevice(deviceId: string | null) {
+  currentAudioInputId = deviceId;
+  
+  // Stop current stream
+  if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+  }
+  
+  // Reinitialize with new device
+  await initializeWebRTC(deviceId || undefined);
+  
+  // Update all peer connections with new track
+  if (localStream) {
+    const newAudioTrack = localStream.getAudioTracks()[0];
+    peerConnections.forEach((pc) => {
+      const senders = pc.getSenders();
+      const audioSender = senders.find(sender => sender.track?.kind === 'audio');
+      if (audioSender && newAudioTrack) {
+        audioSender.replaceTrack(newAudioTrack);
+      }
+    });
+  }
+}
+
+export async function setAudioOutputDevice(deviceId: string | null) {
+  currentAudioOutputId = deviceId;
+  
+  // Update all audio elements
+  audioElements.forEach(async (audioElement) => {
+    if ('setSinkId' in audioElement && deviceId) {
+      try {
+        await (audioElement as any).setSinkId(deviceId);
+      } catch (error) {
+        console.error('Error setting audio output device:', error);
+      }
+    }
+  });
+}
+
+export function getCurrentDevices() {
+  return {
+    audioInput: currentAudioInputId,
+    audioOutput: currentAudioOutputId,
+  };
 }
 
 export async function createPeerConnection(
@@ -43,6 +97,14 @@ export async function createPeerConnection(
     console.log('Received remote track from', peerId);
     const audioElement = new Audio();
     audioElement.srcObject = event.streams[0];
+    
+    // Set output device if configured
+    if (currentAudioOutputId && 'setSinkId' in audioElement) {
+      (audioElement as any).setSinkId(currentAudioOutputId).catch((err: any) => {
+        console.error('Error setting sink ID:', err);
+      });
+    }
+    
     audioElement.play();
     audioElements.set(peerId, audioElement);
   };

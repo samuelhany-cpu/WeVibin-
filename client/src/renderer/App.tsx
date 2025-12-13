@@ -3,11 +3,12 @@ import { Home } from './components/Home';
 import { Room } from './components/Room';
 import { FriendsList } from './components/FriendsList';
 import { ChatWindow } from './components/ChatWindow';
+import { Settings } from './components/Settings';
 import { useRoom } from './hooks/useRoom';
 import { usePTT } from './hooks/usePTT';
 import { useFriends } from './hooks/useFriends';
 import { Friend } from './types';
-import { initializeWebRTC } from './services/webrtc';
+import { initializeWebRTC, setAudioInputDevice, setAudioOutputDevice, getCurrentDevices } from './services/webrtc';
 import { socketService } from './services/socket';
 
 type View = 'home' | 'room' | 'friends';
@@ -16,6 +17,11 @@ export function App() {
   const [currentView, setCurrentView] = useState<View>('home');
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [userName, setUserName] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [audioDevices, setAudioDevices] = useState<{ input: string | null; output: string | null }>({
+    input: null,
+    output: null,
+  });
 
   const {
     roomState,
@@ -55,6 +61,13 @@ export function App() {
   // Initialize WebRTC on mount
   useEffect(() => {
     initializeWebRTC();
+    
+    // Load saved device preferences
+    const devices = getCurrentDevices();
+    setAudioDevices({
+      input: devices.audioInput,
+      output: devices.audioOutput,
+    });
   }, []);
 
   // Update friend status when joining/leaving rooms
@@ -144,6 +157,16 @@ export function App() {
     setCurrentView('friends');
   };
 
+  const handleDevicesChanged = async (audioOutput: string | null, audioInput: string | null) => {
+    if (audioInput !== audioDevices.input) {
+      await setAudioInputDevice(audioInput);
+    }
+    if (audioOutput !== audioDevices.output) {
+      await setAudioOutputDevice(audioOutput);
+    }
+    setAudioDevices({ input: audioInput, output: audioOutput });
+  };
+
   return (
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Navigation Bar (hidden in room) */}
@@ -158,14 +181,48 @@ export function App() {
           padding: '16px 32px',
           display: 'flex',
           gap: '16px',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           zIndex: 100,
         }}>
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onClick={() => setCurrentView('home')}
+              style={{
+                padding: '10px 20px',
+                background: currentView === 'home' ? '#667eea' : 'transparent',
+                color: currentView === 'home' ? 'white' : '#374151',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '16px',
+              }}
+            >
+              🏠 Home
+            </button>
+            <button
+              onClick={handleNavigateToFriends}
+              style={{
+                padding: '10px 20px',
+                background: currentView === 'friends' ? '#667eea' : 'transparent',
+                color: currentView === 'friends' ? 'white' : '#374151',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '16px',
+              }}
+            >
+              👥 Friends
+            </button>
+          </div>
           <button
-            onClick={() => setCurrentView('home')}
+            onClick={() => setShowSettings(true)}
             style={{
               padding: '10px 20px',
-              background: currentView === 'home' ? '#667eea' : 'transparent',
-              color: currentView === 'home' ? 'white' : '#374151',
+              background: 'transparent',
+              color: '#374151',
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
@@ -173,22 +230,7 @@ export function App() {
               fontSize: '16px',
             }}
           >
-            🏠 Home
-          </button>
-          <button
-            onClick={handleNavigateToFriends}
-            style={{
-              padding: '10px 20px',
-              background: currentView === 'friends' ? '#667eea' : 'transparent',
-              color: currentView === 'friends' ? 'white' : '#374151',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '16px',
-            }}
-          >
-            👥 Friends
+            ⚙️ Settings
           </button>
         </nav>
       )}
@@ -242,6 +284,16 @@ export function App() {
           onSendInvite={handleSendInvite}
           onJoinParty={handleJoinParty}
           onClose={handleCloseChat}
+        />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Settings
+          onClose={() => setShowSettings(false)}
+          onDevicesChanged={handleDevicesChanged}
+          currentAudioOutput={audioDevices.output}
+          currentAudioInput={audioDevices.input}
         />
       )}
     </div>

@@ -22,33 +22,6 @@ export function useRoom() {
       setIsConnected(false);
     };
 
-    const handleRoomCreated = (data: { success: boolean; room?: RoomState; error?: string }) => {
-      if (data.success && data.room) {
-        setRoomState(data.room);
-        setIsHost(true);
-        setError(null);
-      } else {
-        setError(data.error || 'Failed to create room');
-      }
-    };
-
-    const handleRoomJoined = (data: { success: boolean; room?: RoomState; error?: string }) => {
-      if (data.success && data.room) {
-        setRoomState(data.room);
-        setIsHost(data.room.host.id === socketService.id);
-        setError(null);
-
-        // Create peer connections for existing users
-        data.room.users.forEach(user => {
-          if (user.id !== socketService.id) {
-            webrtc.createPeerConnection(user.id, true);
-          }
-        });
-      } else {
-        setError(data.error || 'Failed to join room');
-      }
-    };
-
     const handleUserJoined = (data: { userId: string; userName: string }) => {
       setRoomState(prev => {
         if (!prev) return prev;
@@ -178,10 +151,15 @@ export function useRoom() {
   const createRoom = useCallback((userName: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       socketService.emit('create-room', { userName }, (response: any) => {
-        if (response.success) {
+        if (response.success && response.room) {
+          setRoomState(response.room);
+          setIsHost(true);
+          setError(null);
           resolve();
         } else {
-          reject(new Error(response.error));
+          const errorMsg = response.error || 'Failed to create room';
+          setError(errorMsg);
+          reject(new Error(errorMsg));
         }
       });
     });
@@ -190,10 +168,23 @@ export function useRoom() {
   const joinRoom = useCallback((code: string, userName: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       socketService.emit('join-room', { code, userName }, (response: any) => {
-        if (response.success) {
+        if (response.success && response.room) {
+          setRoomState(response.room);
+          setIsHost(response.room.host.id === socketService.id);
+          setError(null);
+
+          // Create peer connections for existing users
+          response.room.users.forEach((user: any) => {
+            if (user.id !== socketService.id) {
+              webrtc.createPeerConnection(user.id, true);
+            }
+          });
+          
           resolve();
         } else {
-          reject(new Error(response.error));
+          const errorMsg = response.error || 'Failed to join room';
+          setError(errorMsg);
+          reject(new Error(errorMsg));
         }
       });
     });

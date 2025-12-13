@@ -1,4 +1,5 @@
 import io, { Socket } from 'socket.io-client';
+import { SERVER_URL } from '../config';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -6,7 +7,7 @@ class SocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    this.socket = io('http://localhost:3001', {
+    this.socket = io(SERVER_URL, {
       transports: ['websocket'],
       reconnection: true,
     });
