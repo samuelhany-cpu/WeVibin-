@@ -42,6 +42,17 @@ Edit `client/src/renderer/config.ts`:
 export const SERVER_URL = 'http://192.168.1.100:3001';
 ```
 
+**Option C: Update CSP (For Dynamic IPs)**
+
+If you need to allow any LAN IP, edit `client/src/renderer/index.html`:
+
+Find the `Content-Security-Policy` meta tag and add your specific IP range:
+```html
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' http://localhost:* http://127.0.0.1:* http://192.168.1.100:* https://accounts.spotify.com ...">
+```
+
+Replace `192.168.1.100` with your actual server IP. You must specify the exact IP address in CSP.
+
 ### 3. Start the Client
 
 ```bash
