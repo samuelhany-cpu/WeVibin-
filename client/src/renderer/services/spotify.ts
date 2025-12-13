@@ -51,7 +51,7 @@ class SpotifyService {
           code: code,
           redirect_uri: REDIRECT_URI,
           client_id: SPOTIFY_CLIENT_ID,
-        }),
+        }) as URLSearchParams,
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -105,7 +105,7 @@ class SpotifyService {
       const response = await axios.post('https://accounts.spotify.com/api/token',
         new URLSearchParams({
           grant_type: 'refresh_token',
-          refresh_token: this.refreshToken,
+          refresh_token: this.refreshToken as string,
           client_id: SPOTIFY_CLIENT_ID,
         }),
         {
