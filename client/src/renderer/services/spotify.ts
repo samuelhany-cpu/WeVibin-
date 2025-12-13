@@ -64,7 +64,7 @@ class SpotifyService {
       this.tokenExpiry = Date.now() + (response.data.expires_in * 1000);
 
       // Save to localStorage
-      localStorage.setItem('spotify_access_token', this.accessToken);
+      localStorage.setItem('spotify_access_token', this.accessToken as string);
       localStorage.setItem('spotify_refresh_token', this.refreshToken || '');
       localStorage.setItem('spotify_token_expiry', this.tokenExpiry.toString());
 
@@ -118,7 +118,7 @@ class SpotifyService {
       this.accessToken = response.data.access_token;
       this.tokenExpiry = Date.now() + (response.data.expires_in * 1000);
 
-      localStorage.setItem('spotify_access_token', this.accessToken);
+      localStorage.setItem('spotify_access_token', this.accessToken as string);
       localStorage.setItem('spotify_token_expiry', this.tokenExpiry.toString());
     } catch (error) {
       console.error('Error refreshing token:', error);
