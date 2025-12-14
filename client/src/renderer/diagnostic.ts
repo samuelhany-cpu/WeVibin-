@@ -62,8 +62,8 @@ class DiagnosticSuite {
     this.log(category, 'WebSocket', typeof WebSocket !== 'undefined' ? 'pass' : 'fail', typeof WebSocket !== 'undefined' ? 'Available' : 'Missing');
     this.log(category, 'RTCPeerConnection', typeof RTCPeerConnection !== 'undefined' ? 'pass' : 'fail', typeof RTCPeerConnection !== 'undefined' ? 'Available' : 'Missing');
     this.log(category, 'mediaDevices', navigator.mediaDevices ? 'pass' : 'fail', navigator.mediaDevices ? 'Available' : 'Missing');
-    this.log(category, 'getUserMedia', navigator.mediaDevices?.getUserMedia ? 'pass' : 'fail', navigator.mediaDevices?.getUserMedia ? 'Available' : 'Missing');
-    this.log(category, 'enumerateDevices', navigator.mediaDevices?.enumerateDevices ? 'pass' : 'fail', navigator.mediaDevices?.enumerateDevices ? 'Available' : 'Missing');
+    this.log(category, 'getUserMedia', (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') ? 'pass' : 'fail', (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') ? 'Available' : 'Missing');
+    this.log(category, 'enumerateDevices', (navigator.mediaDevices && typeof navigator.mediaDevices.enumerateDevices === 'function') ? 'pass' : 'fail', (navigator.mediaDevices && typeof navigator.mediaDevices.enumerateDevices === 'function') ? 'Available' : 'Missing');
     this.log(category, 'Audio Context', typeof AudioContext !== 'undefined' || typeof (window as any).webkitAudioContext !== 'undefined' ? 'pass' : 'fail', 'Audio API support');
     this.log(category, 'File API', typeof File !== 'undefined' ? 'pass' : 'fail', typeof File !== 'undefined' ? 'Available' : 'Missing');
   }
@@ -173,7 +173,7 @@ class DiagnosticSuite {
     
     try {
       // Test if config module loaded
-      this.log(category, 'Config module', true, 'Checking at runtime');
+      this.log(category, 'Config module', 'pass', 'Checking at runtime');
       
       // Check Socket.IO
       const hasSocketIO = typeof (window as any).io !== 'undefined';
