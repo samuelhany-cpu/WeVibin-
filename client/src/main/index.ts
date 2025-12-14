@@ -16,6 +16,8 @@ function createWindow() {
 
   // In development, load from Vite dev server
   if (process.env.NODE_ENV === 'development') {
+    // Clear cache and load fresh
+    mainWindow.webContents.session.clearCache();
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
