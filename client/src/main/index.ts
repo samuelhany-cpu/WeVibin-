@@ -3,6 +3,44 @@ import * as path from 'path';
 
 let mainWindow: BrowserWindow | null = null;
 
+// Register custom protocol for Spotify OAuth
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('wevibin', process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient('wevibin');
+}
+
+// Handle protocol URL (Spotify callback)
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine) => {
+    // Someone tried to run a second instance, focus our window instead
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+
+    // Protocol handler for Spotify callback
+    const url = commandLine.find(arg => arg.startsWith('wevibin://'));
+    if (url && mainWindow) {
+      mainWindow.webContents.send('spotify-callback', url);
+    }
+  });
+}
+
+// Handle the protocol on macOS
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  if (mainWindow && url.startsWith('wevibin://')) {
+    mainWindow.webContents.send('spotify-callback', url);
+  }
+});
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,

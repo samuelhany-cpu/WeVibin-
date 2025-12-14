@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Spotify OAuth Configuration
 const SPOTIFY_CLIENT_ID = '9b64bc936f434160b7e3a97ade878737'; // Replace with your actual client ID
-const REDIRECT_URI = 'http://localhost:5173/callback'; // Or your custom redirect
+const REDIRECT_URI = 'wevibin://callback'; // Custom protocol for Electron
 const SCOPES = [
   'streaming',
   'user-read-email',

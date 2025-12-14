@@ -289,7 +289,15 @@ export function App() {
         )}
 
         {currentView === 'spotify' && (
-          <SpotifyIntegration />
+          <div style={{ padding: '20px' }}>
+            <SpotifyIntegration 
+              onTrackSelected={(track) => {
+                console.log('Track selected:', track);
+                // Future: Integrate with room playback
+              }}
+              onClose={() => setCurrentView('home')}
+            />
+          </div>
         )}
       </div>
 
