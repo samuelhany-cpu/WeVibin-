@@ -4,6 +4,7 @@ import { Room } from './components/Room';
 import { FriendsList } from './components/FriendsList';
 import { ChatWindow } from './components/ChatWindow';
 import { Settings } from './components/Settings';
+import { SpotifyIntegration } from './components/SpotifyIntegration';
 import { useRoom } from './hooks/useRoom';
 import { usePTT } from './hooks/usePTT';
 import { useFriends } from './hooks/useFriends';
@@ -11,7 +12,7 @@ import { Friend } from './types';
 import { initializeWebRTC, setAudioInputDevice, setAudioOutputDevice, getCurrentDevices } from './services/webrtc';
 import { socketService } from './services/socket';
 
-type View = 'home' | 'room' | 'friends';
+type View = 'home' | 'room' | 'friends' | 'spotify';
 
 export function App() {
   const [currentView, setCurrentView] = useState<View>('home');
@@ -216,6 +217,21 @@ export function App() {
             >
               👥 Friends
             </button>
+            <button
+              onClick={() => setCurrentView('spotify')}
+              style={{
+                padding: '10px 20px',
+                background: currentView === 'spotify' ? '#667eea' : 'transparent',
+                color: currentView === 'spotify' ? 'white' : '#374151',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '16px',
+              }}
+            >
+              🎵 Spotify
+            </button>
           </div>
           <button
             onClick={() => setShowSettings(true)}
@@ -270,6 +286,10 @@ export function App() {
             onAddFriend={addFriend}
             onOpenChat={handleOpenChat}
           />
+        )}
+
+        {currentView === 'spotify' && (
+          <SpotifyIntegration />
         )}
       </div>
 
